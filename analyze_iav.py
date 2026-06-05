@@ -40,3 +40,85 @@ def classify_gene(log2_fold_change):
         return "upregulated"
 
     return "downregulated"
+
+
+def find_column_index(header, possible_names):
+    """Find the index of a column using possible column names.
+
+    Args:
+        header (list[str]): Header columns from the TSV file.
+        possible_names (list[str]): Accepted names for the target column.
+
+    Returns:
+        int: Index of the first matching column.
+
+    Raises:
+        ValueError: If none of the possible names is found.
+    """
+    for name in possible_names:
+        if name in header:
+            return header.index(name)
+
+    accepted_names = ", ".join(possible_names)
+    raise ValueError(f"No se encontró ninguna columna válida: {accepted_names}")
+
+
+def load_deseq2_results(filename):
+    """Load valid DESeq2 results from a TSV file.
+
+    Args:
+        filename (str): Path to the DESeq2 TSV input file.
+
+    Returns:
+        list[tuple[str, float, float]]: Valid genes as tuples with
+        gene name, log2 fold change, and adjusted p-value.
+
+    Raises:
+        FileNotFoundError: If the input file does not exist.
+        ValueError: If required columns are missing.
+    """
+    input_path = Path(filename)
+
+    if not input_path.exists():
+        raise FileNotFoundError(
+            f"no se encontró el archivo de entrada: {filename}"
+        )
+
+    valid_genes = []
+
+    with input_path.open("r", encoding="utf-8") as input_file:
+        header_line = input_file.readline().strip()
+
+        if not header_line:
+            raise ValueError("el archivo de entrada está vacío")
+
+        header = header_line.split("\t")
+
+        gene_index = find_column_index(header, ["gene", "gene_id"])
+        lfc_index = find_column_index(header, ["log2FoldChange"])
+        padj_index = find_column_index(header, ["padj"])
+
+        required_max_index = max(gene_index, lfc_index, padj_index)
+
+        for line in input_file:
+            line = line.strip()
+
+            if not line:
+                continue
+
+            columns = line.split("\t")
+
+            if len(columns) <= required_max_index:
+                continue
+
+            gene = columns[gene_index].strip()
+
+            try:
+                log2_fold_change = float(columns[lfc_index])
+                padj = float(columns[padj_index])
+            except ValueError:
+                continue
+
+            valid_genes.append((gene, log2_fold_change, padj))
+
+    return valid_genes
