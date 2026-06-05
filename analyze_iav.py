@@ -122,3 +122,74 @@ def load_deseq2_results(filename):
             valid_genes.append((gene, log2_fold_change, padj))
 
     return valid_genes
+
+
+def filter_genes(results, lfc_threshold, padj_threshold):
+    """Filter and classify significant genes.
+
+    Args:
+        results (list[tuple[str, float, float]]): Valid DESeq2 results.
+        lfc_threshold (float): Minimum absolute log2 fold change threshold.
+        padj_threshold (float): Maximum adjusted p-value threshold.
+
+    Returns:
+        list[tuple[str, float, float, str]]: Significant genes with status.
+    """
+    filtered_genes = []
+
+    for gene, log2_fold_change, padj in results:
+        if is_significant(
+            log2_fold_change,
+            padj,
+            lfc_threshold,
+            padj_threshold,
+        ):
+            status = classify_gene(log2_fold_change)
+            filtered_genes.append((gene, log2_fold_change, padj, status))
+
+    return filtered_genes
+
+
+def write_results(output_file, filtered_genes):
+    """Write significant genes to a TSV output file.
+
+    Args:
+        output_file (str): Path to the output TSV file.
+        filtered_genes (list[tuple[str, float, float, str]]): Filtered genes.
+    """
+    output_path = Path(output_file)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with output_path.open("w", encoding="utf-8") as file:
+        file.write("gene\tlog2FoldChange\tpadj\tstatus\n")
+
+        for gene, log2_fold_change, padj, status in filtered_genes:
+            file.write(
+                f"{gene}\t"
+                f"{log2_fold_change:.4f}\t"
+                f"{padj:.6g}\t"
+                f"{status}\n"
+            )
+
+
+def print_summary(filtered_genes):
+    """Print a summary of significant genes.
+
+    Args:
+        filtered_genes (list[tuple[str, float, float, str]]): Filtered genes.
+    """
+    total = len(filtered_genes)
+    upregulated = 0
+    downregulated = 0
+
+    for gene in filtered_genes:
+        status = gene[3]
+
+        if status == "upregulated":
+            upregulated += 1
+        elif status == "downregulated":
+            downregulated += 1
+
+    print(f"Genes significativos: {total}")
+    print(f"Genes sobreexpresados: {upregulated}")
+    print(f"Genes subexpresados: {downregulated}")
