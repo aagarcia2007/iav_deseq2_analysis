@@ -9,6 +9,8 @@ Usage:
     uv run python analyze_iav.py data/iav_deseq2_results.tsv results/iav_significant_genes.tsv
 """
 
+import argparse
+import sys
 from pathlib import Path
 
 
@@ -193,3 +195,96 @@ def print_summary(filtered_genes):
     print(f"Genes significativos: {total}")
     print(f"Genes sobreexpresados: {upregulated}")
     print(f"Genes subexpresados: {downregulated}")
+
+
+def parse_arguments():
+    """Parse command-line arguments.
+
+    Returns:
+        argparse.Namespace: Parsed command-line arguments.
+    """
+    parser = argparse.ArgumentParser(
+        description=(
+            "Analiza resultados de DESeq2 para identificar genes "
+            "diferencialmente expresados."
+        )
+    )
+
+    parser.add_argument(
+        "input_file",
+        help="Ruta del archivo TSV de entrada generado por DESeq2.",
+    )
+
+    parser.add_argument(
+        "output_file",
+        help="Ruta del archivo TSV de salida.",
+    )
+
+    parser.add_argument(
+        "--lfc_threshold",
+        type=float,
+        default=1.0,
+        help="Threshold mínimo absoluto para log2FoldChange. Default: 1.0.",
+    )
+
+    parser.add_argument(
+        "--padj_threshold",
+        type=float,
+        default=0.05,
+        help="Threshold máximo para padj. Default: 0.05.",
+    )
+
+    args = parser.parse_args()
+    validate_thresholds(args, parser)
+
+    return args
+
+
+def validate_thresholds(args, parser):
+    """Validate threshold arguments.
+
+    Args:
+        args (argparse.Namespace): Parsed command-line arguments.
+        parser (argparse.ArgumentParser): Parser used to show errors.
+
+    Raises:
+        SystemExit: If threshold values are invalid.
+    """
+    if args.lfc_threshold < 0:
+        parser.error("--lfc_threshold debe ser mayor o igual a 0.")
+
+    if not 0 <= args.padj_threshold <= 1:
+        parser.error("--padj_threshold debe estar entre 0 y 1.")
+
+
+def main():
+    """Run the complete DESeq2 analysis workflow."""
+    args = parse_arguments()
+
+    try:
+        print(f"Leyendo archivo: {args.input_file}")
+        print(f"Threshold log2FoldChange: {args.lfc_threshold}")
+        print(f"Threshold padj: {args.padj_threshold}")
+
+        results = load_deseq2_results(args.input_file)
+        filtered_genes = filter_genes(
+            results,
+            args.lfc_threshold,
+            args.padj_threshold,
+        )
+
+        write_results(args.output_file, filtered_genes)
+        print_summary(filtered_genes)
+
+        print(f"Resultados escritos en: {args.output_file}")
+
+    except FileNotFoundError as error:
+        print(f"Error: {error}", file=sys.stderr)
+        sys.exit(1)
+    except ValueError as error:
+        print(f"Error: {error}", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
