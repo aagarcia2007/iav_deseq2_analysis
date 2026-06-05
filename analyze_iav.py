@@ -25,3 +25,18 @@ def is_significant(log2_fold_change, padj, lfc_threshold, padj_threshold):
         bool: True if the gene is significant, False otherwise.
     """
     return padj < padj_threshold and abs(log2_fold_change) >= lfc_threshold
+
+
+def classify_gene(log2_fold_change):
+    """Classify a significant gene by expression direction.
+
+    Args:
+        log2_fold_change (float): Log2 fold change value from DESeq2.
+
+    Returns:
+        str: "upregulated" if positive, otherwise "downregulated".
+    """
+    if log2_fold_change > 0:
+        return "upregulated"
+
+    return "downregulated"
