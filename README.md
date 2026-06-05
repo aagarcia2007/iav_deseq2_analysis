@@ -170,6 +170,7 @@ El programa muestra un error porque el valor debe ser mayor o igual a 0.
 - [Contexto del proyecto](docs/context.md)
 - [Diseño del programa](docs/design.md)
 - [Casos de prueba](docs/test_cases.md)
+- [Uso responsable de IA](docs/uso_ia.md)
 
 ## Buenas prácticas aplicadas
 
