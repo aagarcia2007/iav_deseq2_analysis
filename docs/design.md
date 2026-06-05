@@ -301,3 +301,60 @@ Si el usuario no proporciona estos valores, se usarán los valores por defecto:
 
 - `lfc_threshold = 1.0`
 - `padj_threshold = 0.05`
+
+---
+
+## Extensión implementada: thresholds configurables
+
+La extensión permite que el usuario cambie los criterios de significancia desde
+la línea de comandos.
+
+Antes de la extensión, los valores estaban definidos directamente en el código:
+
+```python
+lfc_threshold = 1.0
+padj_threshold = 0.05
+```
+
+Después de la extensión, estos valores se reciben mediante `argparse`.
+
+## Argumentos nuevos
+
+| Argumento | Tipo | Valor por defecto | Descripción |
+|---|---:|---:|---|
+| `--lfc_threshold` | float | `1.0` | Magnitud mínima absoluta de `log2FoldChange` |
+| `--padj_threshold` | float | `0.05` | Valor máximo permitido de `padj` |
+
+## Ejemplo de ejecución con thresholds personalizados
+
+```bash
+uv run python analyze_iav.py data/iav_deseq2_results.tsv results/iav_significant_genes_strict.tsv --lfc_threshold 2.0 --padj_threshold 0.01
+```
+
+## Cambios en el diseño
+
+Se agregó la función:
+
+```python
+validate_thresholds(args, parser)
+```
+
+Esta función valida que:
+
+- `lfc_threshold >= 0`
+- `0 <= padj_threshold <= 1`
+
+La función `main()` coordina ahora el flujo completo:
+
+1. Leer argumentos.
+2. Validar thresholds.
+3. Cargar resultados DESeq2.
+4. Filtrar genes usando los thresholds indicados.
+5. Escribir resultados.
+6. Mostrar resumen.
+
+## Ventaja de la extensión
+
+La principal ventaja es que el programa se vuelve más flexible y reproducible.
+El usuario puede ejecutar el mismo análisis con criterios más estrictos o más
+permisivos sin editar el archivo `analyze_iav.py`.

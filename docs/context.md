@@ -103,3 +103,38 @@ gene	log2FoldChange	padj	status
 MX1	4.2	0.0001	upregulated
 GENE1	-3.0	0.001	downregulated
 ```
+
+---
+
+## Extensión: thresholds configurables
+
+Además de la versión mínima, el programa incluye una extensión que permite
+configurar los criterios de significancia desde la línea de comandos.
+
+Los argumentos nuevos son:
+
+- `--lfc_threshold`
+- `--padj_threshold`
+
+Si el usuario no proporciona estos argumentos, el programa usa valores por defecto:
+
+- `lfc_threshold = 1.0`
+- `padj_threshold = 0.05`
+
+Ejemplo con valores personalizados:
+
+```bash
+uv run python analyze_iav.py data/iav_deseq2_results.tsv results/iav_significant_genes_strict.tsv --lfc_threshold 2.0 --padj_threshold 0.01
+
+Esta extensión permite hacer análisis más flexibles sin modificar el código fuente.
+
+Validaciones de la extensión
+
+Para evitar valores inválidos:
+
+lfc_threshold debe ser mayor o igual a 0.
+padj_threshold debe estar entre 0 y 1.
+
+Si el usuario proporciona valores inválidos, el programa muestra un mensaje de
+error claro y detiene la ejecución.
+```

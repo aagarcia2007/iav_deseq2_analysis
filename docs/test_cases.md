@@ -296,3 +296,117 @@ El programa evita usar thresholds biológicamente incoherentes.
 | 9 | thresholds personalizados | usa valores del usuario | extensión |
 | 10 | `padj_threshold = 2` | error claro | validación de padj |
 | 11 | `lfc_threshold = -1` | error claro | validación de log2FC |
+
+
+---
+
+## Resultados de pruebas manuales
+
+Después de implementar la versión mínima y la extensión, se probaron los siguientes comandos.
+
+### Prueba 1: ejecución con valores por defecto
+
+Comando:
+
+```bash
+uv run python analyze_iav.py data/iav_deseq2_results.tsv results/iav_significant_genes.tsv
+```
+
+Resultado esperado:
+
+```text
+El programa lee el archivo de entrada.
+El programa usa lfc_threshold = 1.0.
+El programa usa padj_threshold = 0.05.
+El programa genera results/iav_significant_genes.tsv.
+El programa imprime un resumen final.
+```
+
+Estado:
+
+```text
+Aprobado si el archivo se genera y el programa no muestra errores.
+```
+
+### Prueba 2: ejecución con thresholds personalizados
+
+Comando:
+
+```bash
+uv run python analyze_iav.py data/iav_deseq2_results.tsv results/iav_significant_genes_strict.tsv --lfc_threshold 2.0 --padj_threshold 0.01
+```
+
+Resultado esperado:
+
+```text
+El programa usa lfc_threshold = 2.0.
+El programa usa padj_threshold = 0.01.
+El archivo generado contiene genes que cumplen criterios más estrictos.
+```
+
+Estado:
+
+```text
+Aprobado si se genera results/iav_significant_genes_strict.tsv.
+```
+
+### Prueba 3: padj_threshold inválido
+
+Comando:
+
+```bash
+uv run python analyze_iav.py data/iav_deseq2_results.tsv results/test.tsv --padj_threshold 2
+```
+
+Resultado esperado:
+
+```text
+El programa muestra un error indicando que --padj_threshold debe estar entre 0 y 1.
+```
+
+Estado:
+
+```text
+Aprobado si el programa se detiene con un mensaje claro.
+```
+
+### Prueba 4: lfc_threshold inválido
+
+Comando:
+
+```bash
+uv run python analyze_iav.py data/iav_deseq2_results.tsv results/test.tsv --lfc_threshold -1
+```
+
+Resultado esperado:
+
+```text
+El programa muestra un error indicando que --lfc_threshold debe ser mayor o igual a 0.
+```
+
+Estado:
+
+```text
+Aprobado si el programa se detiene con un mensaje claro.
+```
+
+### Prueba 5: archivo inexistente
+
+Comando:
+
+```bash
+uv run python analyze_iav.py data/no_existe.tsv results/test.tsv
+```
+
+Resultado esperado:
+
+```text
+Error: no se encontró el archivo de entrada: data/no_existe.tsv
+```
+
+Estado:
+
+```text
+Aprobado si el programa muestra un mensaje claro y no imprime un traceback largo.
+```
+
